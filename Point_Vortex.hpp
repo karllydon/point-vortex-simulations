@@ -11,7 +11,7 @@ using namespace arma;
 
 //------------------------------------------------------------------ Constants + Flags -----------------------------------------------------------------------------------------------------------
 
-const int N = 5;			//number of vortices in system
+const int N = 6;			//number of vortices in system
 const int File_Max = 200000;		//max files allowed to print
 const int write_limit=100;
 const double pi = 3.14159265358979;
