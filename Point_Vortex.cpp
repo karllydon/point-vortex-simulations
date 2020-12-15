@@ -321,7 +321,7 @@ void bound_dormand_price(vec circ, mat xy) {      //run dormand price until fina
 
 int main() {
 	mat xy;
-	vec circ={-1,1,1,1};
+	vec circ={-1,1,1,1,1};
 	double dipole_end_d;
 	Post_Process post(0);
 	ofstream output;
@@ -329,7 +329,7 @@ int main() {
 	cout<< "matric+circ initialized";
 	for (int i=0; i<=80; i++){
 		for (int j=0;j<=160;j++){ 	
-			xy={{-4.0-(j*pi*0.00125),-0.5+(i*0.00875)}, {-4.0-(j*pi*0.00125),-0.3+(i*0.00875)}, {0.0,0.1},{0.0, -0.1}}; 
+			xy={{-4.0-(j*pi*0.00125),-0.34+(i*0.00425)}, {-4.0-(j*pi*0.00125),-0.14+(i*0.00425)}, {0.0,0.1},{0.0866, -0.05}, {-0.0866, -0.05}}; 
 			bound_dormand_price(circ,xy);
 			post.count_files();
 			post.calc_impact_gen();
