@@ -342,13 +342,6 @@ int main() {
 	  }
 	output.close();			
 	return 0;
-	Post_Process post(0);
-	post.count_files();
-	post.file_delete_routine();
-	return 0;
-
-
-
 }
 
 /*mat xy;
