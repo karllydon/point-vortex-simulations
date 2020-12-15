@@ -299,7 +299,7 @@ void bound_dormand_price(vec circ, mat xy) {      //run dormand price until fina
       xy.raw_print(writer);
       writer.close();
     } 
-    else if (counter>File_Max){
+    else if (counter=File_Max){
     	break;
     }
     lengths={hypot(xy(0,0)-xy(2,0),xy(0,1)-xy(2,1)),hypot(xy(0,0)-xy(1,0),xy(0,1)-xy(1,1))};
@@ -320,41 +320,35 @@ void bound_dormand_price(vec circ, mat xy) {      //run dormand price until fina
 
 
 int main() {
-	ofstream writer;
-	writer.open("2cluster_multiphase_angles.txt", ofstream::app);
-	double inc = 0;
 	mat xy;
-	vec t = timesteps(0, 100, 200);
-	vec circ = { -1, 1, 1,1};
-	Post_Process test(0);
-	for (int i = 0; i <= 100; ++i) {
-		xy = { { -10.0,-4.1+inc },{ -10.0,-3.9 + inc },{ 0.0,0.1}, {0.0, -0.1} }; //no phase difference
-		dormand_price(t, circ, xy);
-		test.count_files();
-		test.calc_impact_gen();
-		test.calc_theta();
-		writer << test.get_impact()/0.2 << "\t" << test.get_theta() << "\t";
-		test.file_delete_routine();
-		xy= { { -10.0-(0.2*pi*0.25),-4.1+inc },{ -10.0-(0.2*pi*0.25),-3.9 + inc },{ 0.0,0.1}, {0.0, -0.1} };
-		dormand_price(t, circ, xy);
-		test.count_files();
-		test.calc_theta();
-		writer << test.get_theta() << "\t";
-		test.file_delete_routine();
-		xy= { { -10.0-(0.2*pi*0.5),-4.1+inc },{ -10.0-(0.2*pi*0.5),-3.9 + inc },{ 0.0,0.1}, {0.0, -0.1} };
-		dormand_price(t, circ, xy);
-		test.count_files();
-		test.calc_theta();
-		writer << test.get_theta() << endl;
-		test.file_delete_routine();
-		inc += 0.08;
-	}
-	writer.close();
-	return 0;/*
-	Post_Process test(0);
-	test.count_files();
-	test.file_delete_routine();
-	return 0;*/
+	vec circ={-1,1,1,1};
+	double dipole_end_d;
+	Post_Process post(0);
+	ofstream output;
+	output.open("min-end-d.txt",ofstream::app);
+	cout<< "matric+circ initialized";
+	for (int i=0; i<=80; i++){
+		for (int j=0;j<=160;j++){ 	
+			xy={{-4.0-(j*pi*0.00125),-0.5+(i*0.00875)}, {-4.0-(j*pi*0.00125),-0.3+(i*0.00875)}, {0.0,0.1},{0.0, -0.1}}; 
+			bound_dormand_price(circ,xy);
+			post.count_files();
+			post.calc_impact_gen();
+			post.calc_separations(post.get_file_num()-1); 
+			dipole_end_d=post.get_separations().head(N-1).min(); 
+			output<<post.get_di_length()/0.2<<"\t"<<post.get_impact()/0.2<<"\t"<<dipole_end_d<<"\t"<<endl;
+			post.file_delete_routine();	
+			cout<<i<<"\t"<<j<<"\t"<<endl;	
+		}
+	  }
+	output.close();			
+	return 0;
+	Post_Process post(0);
+	post.count_files();
+	post.file_delete_routine();
+	return 0;
+
+
+
 }
 
 /*mat xy;

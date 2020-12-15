@@ -12,8 +12,8 @@ using namespace arma;
 //------------------------------------------------------------------ Constants + Flags -----------------------------------------------------------------------------------------------------------
 
 const int N = 4;			//number of vortices in system
-const int File_Max = 500000;		//max files allowed to print
-const int write_limit=50;
+const int File_Max = 200000;		//max files allowed to print
+const int write_limit=100;
 const double pi = 3.14159265358979;
 
 const bool Flag_is_Periodic = false; //periodic BCs
@@ -23,7 +23,7 @@ const bool Flag_Print_Momen = false; //print momentums
 const double tol = pow(10, -12);//tolerance of rk45 error
 const double Rtol = pow(10, -12); // relative tolerqance of rk45 error
 static double h=0.1;   //step length
-const double hmin = 0.0001; //min step allowed
+const double hmin = pow(10,-8); //min step allowed
 const double hmax = 0.1; //max step allowed
 const double hfac=0.8;
 const double hfacmax=2;
