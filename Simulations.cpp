@@ -20,8 +20,6 @@ for (int i = 1; i < 12; ++i) {
 		post.File_Delete_Routine();
 	}
 }
-cout << "Press enter";
-cin.get();
 */
 
 /* Plot 4N Min Lengths
