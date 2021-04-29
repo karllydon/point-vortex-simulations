@@ -5,9 +5,6 @@
 
 //-------------------------------------------------------------------- Misc. Functions --------------------------------------------------------------------------------------------------------
 
-double square(double x) {
-	return x*x;
-}
 
 vec timesteps(double a, double b, int m) {	//Generate timestep mesh vector + Set h
 	vec t_vals(m + 1, fill::zeros);
@@ -24,7 +21,7 @@ double x_per_sum(double x, double y){    //infinite sum for the equation of moti
 	double new_val;
 	for (int m=1; m<=50; m++){
 		new_val=old_val- (sin(y)/(cosh(x-(2*pi*m))-cos(y)))-(sin(y)/(cosh(x+(2*pi*m))-cos(y)));
-		if (abs(new_val-old_val)< pow(10,-12)) return new_val;
+		if (std::abs(new_val-old_val)< pow(10,-12)) return new_val;
 		old_val=new_val;
 	}
 	return new_val;
@@ -48,7 +45,7 @@ double per_hamil_sum(double x, double y) {		//infinite sum approximation for the
 	double new_val;
 	for (int m = 1; m < 2000; m++) {
 		new_val = old_val + log((cosh(x-(2*pi*m))-cos(y))/cosh(2*pi*m))+log((cosh(x+(2*pi*m))-cos(y))/cosh(-2*pi*m));
-		if (abs(new_val - old_val) < pow(10, -12)) return new_val;
+		if (std:: abs(new_val - old_val) < pow(10, -12)) return new_val;
 		old_val = new_val;
 	}
 	return new_val;
@@ -103,14 +100,10 @@ double yij(int i, int j, mat &xy) { //calculate y distance between two vortices
 	return xy(i, 1) - xy(j, 1);
 }
 
-double length(int i, int j, mat &xy) {         //calculate Euclidean legnth between two vortices
-	return sqrt(square(xij(i, j, xy)) + square(yij(i, j, xy)));
-}
-
 double x_vel(int i, vec &circ, mat &xy) {		//calculate the x velocity of the ith vortex
 	double sum = 0;
-	for (int j = 0; j < N; ++j) {
-		if (i != j) { sum += (circ(j)*yij(i, j, xy)) / square(length(i, j, xy)); }
+	for (int j = 0; j < N; ++j) {	
+		if (i != j) { sum += (circ(j)*yij(i, j, xy)) / pow(hypot(xy(i,0)-xy(j,0), xy(i,1)-xy(j,1)), 2); }
 	}
 	return -sum / (2 * pi);
 }
@@ -126,7 +119,7 @@ double per_x_vel(int i, vec &circ, mat &xy) {	//calculate the x velocity of ith 
 double y_vel(int i, vec &circ, mat &xy) {   //calculate the y velocity of the ith vortex
 	double sum = 0;
 	for (int j = 0; j < N; ++j) {
-		if (i != j) { sum += (circ(j)*xij(i, j, xy)) / square(length(i, j, xy)); }
+		if (i != j) { sum += (circ(j)*xij(i, j, xy)) / pow(hypot(xy(i,0)-xy(j,0), xy(i,1)-xy(j,1)), 2); }
 	}
 	return sum / (2 * pi);
 }
@@ -173,7 +166,7 @@ double q(vec &circ, mat &xy) {					//linear momentum y direction
 
 double m(vec &circ, mat &xy) {				//angular momentum
 	double sum = 0;
-	for (int i = 0; i < N; ++i) sum += circ(i)*(square(xy(i, 0)) + square(xy(i, 1)));
+	for (int i = 0; i < N; ++i) sum += circ(i)*(pow(xy(i, 0),2) + pow(xy(i, 1),2));
 	return sum;
 }
 
@@ -209,8 +202,8 @@ double error_func(mat &RK1, mat &RK2){
 	for (int i=0; i<N; i++){
 		sc_x=tol+(Rtol*fmax(RK1(i,0), RK2(i,0)));
 		sc_y=tol+(Rtol*fmax(RK1(i,1), RK2(i,1)));
-		sum+=square((RK1(i,0)-RK2(i,0))/sc_x);
-		sum+=square((RK1(i,1)-RK2(i,1))/sc_y);
+		sum+=pow((RK1(i,0)-RK2(i,0))/sc_x, 2);
+		sum+=pow((RK1(i,1)-RK2(i,1))/sc_y, 2);
 	}
 	return sqrt(sum/(2*N));
 }
@@ -259,7 +252,7 @@ cube rk45(mat &xy, vec &circ) {
 }
 
 void dormand_price(vec &t_steps, vec &circ, mat &xy) {
-	ofstream writer, hamil_print, momen_print;		//initialize the three file output objects
+	std::ofstream writer, hamil_print, momen_print;		//initialize the three file output objects
 	double error=0;
 	double h_old = h;
 	if (Flag_Print_Hamil){	
@@ -284,7 +277,7 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 		RK_Results = rk45(xy, circ);
 		error=error_func(RK_Results.slice(0), RK_Results.slice(1));
 		while (error>1){
-			h*=min(hfacmax,max(hfacmin,hfac*pow(1/error,0.2)));
+			h*=std:: min(hfacmax,std:: max(hfacmin,hfac*pow(1/error,0.2)));
 			if (h<hmin){
 				h=hmin;
 				RK_Results = rk45(xy, circ);
@@ -295,7 +288,7 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 		}	
 		xy = RK_Results.slice(1); //set xy
 		if (run_counter%write_limit==0 && file_counter <File_Max){	
-			writer.open("Vortex_xy_" + to_string(file_counter) + ".txt");	
+			writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");	
 			xy.raw_print(writer);
 			writer.close();
 			file_counter++;
@@ -304,7 +297,7 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 		run_counter++;	
 		cout <<t <<"\t" << file_counter<< endl;
 	}
-	writer.open("Vortex_xy_" + to_string(file_counter) + ".txt");
+	writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");
 	xy.raw_print(writer);
 	writer.close(); 
 	file_counter++;
@@ -313,12 +306,12 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 	writer.close();
 	if (Flag_Print_Momen) momen_print.close();
 	if (Flag_Print_Hamil) hamil_print.close();	
-	cout << "File output complete\n"<<run_counter;
+	std::cout << "File output complete\n"<<run_counter;
 	h = h_old;
 }
 
 void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until final dipole is 20d + L away
-  ofstream writer, hamil_print, momen_print;			//initialize the three file output objects
+  std:: ofstream writer, hamil_print, momen_print;			//initialize the three file output objects
   double error=0;
   double h_old = h;  
   if (Flag_Print_Hamil) { 
@@ -344,7 +337,7 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
     if (Flag_Print_Momen) momen_print << p(circ, xy) << "\t" << q(circ, xy) << "\t" << m(circ, xy) << endl;
     RK_Results = rk45(xy, circ); 
     error = error_func(RK_Results.slice(0), RK_Results.slice(1));
-    if (error < pow(hfac,5)) h*=min(hfacmax,hfac*pow(1/error,0.2)); 
+    if (error < pow(hfac,5)) h*=std::min(hfacmax,hfac*pow(1/error,0.2)); 
     if (h>hmax) h=hmax;
    while (error>1){		
 	if (h<hmin){
@@ -353,12 +346,12 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
 		break;
 	}
 	RK_Results = rk45(xy, circ);
-	h*=min(hfacmax,max(hfacmin,hfac*pow(1/error,0.2)));
+	h*=std::min(hfacmax,std::max(hfacmin,hfac*pow(1/error,0.2)));
 	error=error_func(RK_Results.slice(0), RK_Results.slice(1));
     }
     xy = RK_Results.slice(1); //set xy, print xy then repeat
     if (run_counter%write_limit==0&& file_counter<File_Max){
-	    writer.open("Vortex_xy_" + to_string(file_counter) + ".txt");
+	    writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");
 	    xy.raw_print(writer);
 	    writer.close(); 
 	    file_counter++;
@@ -367,7 +360,7 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
     lengths={hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1)),hypot(xy(0,0)-xy(1,0), xy(0,1)-xy(1,1))};
     run_counter++;
   }
-  writer.open("Vortex_xy_" + to_string(file_counter) + ".txt");
+  writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");
   xy.raw_print(writer);
   writer.close(); 
   file_counter++;
@@ -384,19 +377,30 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
 //------------------------------------------------------------------------------------------------------------------
 
 int main(){
-	mat xy;
-	xy=position_generate(0.7, 0.0314159);
-	vec circ = {1,-1,1,-1};
-	bound_dormand_price(circ, xy);	
-
-	Post_Process test(0);
-	test.calc_mat_separations(538);
-	test.find_circs();
-	cout << test.get_mat_separations()<< endl;
-	test.cluster_populate(538);
-	cout<<test.get_clusters(); 	
+	mat xy;	
+	vec circ = { 1,-1,1,-1 };
+	Post_Process post(0);
+	double L_inc = 1.2/320.0;
+	double psi = 0;
+	double psi_inc = 2*pi / 200;
+	double L=0.4;
+	for (int i = 0; i < 200; ++i) {
+		psi += psi_inc;	
+		for (int j = 0; j < 320; ++j) {
+			L = 0.4+(L_inc*j);
+			xy = position_generate(L, psi);
+			bound_dormand_price(circ, xy);
+			post.update_4n(psi, L);
+			post.count_files();
+			post.print_critical_lengths_4n(0,2);
+			cout << i << "\t"<< j <<endl;
+			post.file_delete_routine();
+			}
+	}
 	return 0;
-		/*mat xy;
+}
+
+	/*mat xy;
 	vec circ={-1,1,1,1, 1, 1};
 	vec seps;
 	double dipole_end_d;
@@ -458,7 +462,7 @@ int main(){
 	output.close();			
 	return 0;
 	*/
-}
+
 
 /*mat xy;
 	vec circ={-1,1,1, 1, 1};	
