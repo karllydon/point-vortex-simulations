@@ -333,9 +333,7 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
   double init_L=hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1));
   vec lengths={hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1)),hypot(xy(0,0)-xy(1,0), xy(0,1)-xy(1,1))};
   while(lengths.max()<(20*init_d)+init_L) {
-    if (Flag_Print_Hamil) hamil_print <<hamil(circ, xy) << endl;
-    if (Flag_Print_Momen) momen_print << p(circ, xy) << "\t" << q(circ, xy) << "\t" << m(circ, xy) << endl;
-    RK_Results = rk45(xy, circ); 
+        RK_Results = rk45(xy, circ); 
     error = error_func(RK_Results.slice(0), RK_Results.slice(1));
     if (error < pow(hfac,5)) h*=std::min(hfacmax,hfac*pow(1/error,0.2)); 
     if (h>hmax) h=hmax;
@@ -355,6 +353,8 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
 	    xy.raw_print(writer);
 	    writer.close(); 
 	    file_counter++;
+	    if (Flag_Print_Hamil) hamil_print <<hamil(circ, xy) << endl;
+	    if (Flag_Print_Momen) momen_print << p(circ, xy) << "\t" << q(circ, xy) << "\t" << m(circ, xy) << endl;
     }
     else if (file_counter==File_Max) break;
     lengths={hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1)),hypot(xy(0,0)-xy(1,0), xy(0,1)-xy(1,1))};

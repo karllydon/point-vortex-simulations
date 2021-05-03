@@ -232,7 +232,7 @@ void Post_Process::print_critical_lengths_4n(int vor1, int vor2) {     //print t
 	vec Lengths = critical_lengths(vor1,vor2);
 	print.open("critical_lengths.txt", std:: ofstream::app);	
 	print << di_length << "\t" << psi << "\t" ;
-	for (int i=0; i<(int)Lengths.n_elem; i++) print << "\t" << Lengths(i) / d;
+	for (int i=0; i<(int) Lengths.n_elem; i++) print << "\t" << Lengths(i);
 	print << endl;
 	print.close();
 }
