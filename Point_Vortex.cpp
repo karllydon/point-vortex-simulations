@@ -51,16 +51,6 @@ double per_hamil_sum(double x, double y) {		//infinite sum approximation for the
 	return new_val;
 }
 
-/*mat position_generate(double L, double phi) {       //generates 4 position matrix with 2nd dipole at angle phi at length L
-	mat out = { {5,4.9},{5,5.1},{0,0},{0,0} };
-	rowvec Vor_3 = { (0.1*cos(phi - (pi / 2))) + (L*cos(phi)),(0.1*sin(phi - (pi / 2))) + (L*sin(phi))+5 };
-	rowvec Vor_4 = { (0.1*cos(phi + (pi / 2))) + (L*cos(phi)),(0.1*sin(phi + (pi / 2))) + (L*sin(phi))+5 };
-	out.row(2) = Vor_3;
-	out.row(3) = Vor_4;
-	return out;
-}*/
-
-
 mat position_generate(double L, double phi){      //generates dipole/dipole collision with L1=5 and a given L and incidence phi
 	mat out = {{-5, 0.1}, {-5, -0.1}, {0,0}, {0,0}};
 	double L2=5/L;
@@ -70,10 +60,6 @@ mat position_generate(double L, double phi){      //generates dipole/dipole coll
 	out.row(3)= Vor_4;
 	return out;
 }
-
-
-
-
 
 mat rand_per_mat(){              //generates a random batrix inside a -pi->pi box for use in periodic case
 	mat pos=randu(N,2);
@@ -252,7 +238,7 @@ cube rk45(mat &xy, vec &circ) {
 }
 
 void dormand_price(vec &t_steps, vec &circ, mat &xy) {
-	std::ofstream writer, hamil_print, momen_print;		//initialize the three file output objects
+	std::ofstream writer, hamil_print, momen_print, time_print;		//initialize the three file output objects
 	double error=0;
 	double h_old = h;
 	if (Flag_Print_Hamil){	
@@ -265,6 +251,9 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 	}
 	writer.precision(12);	
 	writer.open("Vortex_xy_0.txt");	//open initial output file	
+	time_print.precision(12);
+	time_print.open("timesteps.txt");
+	time_print << t_steps[0] << endl;
 	xy.raw_print(writer);	//print initial condition matrix
 	writer.close();	
 	double end = t_steps[t_steps.size() - 1];	//set when to end print process (when end time is reached)
@@ -272,29 +261,32 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 	int file_counter = 1;				//count the files that have already been made
 	int run_counter = 1;
 	for (double t = t_steps[1]; t <= end; t += h) {
-		if (Flag_Print_Hamil) hamil_print << hamil(circ, xy) << endl;
-		if (Flag_Print_Momen) momen_print << p(circ, xy) << "\t" << q(circ, xy) << "\t" << m(circ, xy) << endl;	
-		RK_Results = rk45(xy, circ);
-		error=error_func(RK_Results.slice(0), RK_Results.slice(1));
-		while (error>1){
-			h*=std:: min(hfacmax,std:: max(hfacmin,hfac*pow(1/error,0.2)));
+		RK_Results = rk45(xy, circ); 
+		error = error_func(RK_Results.slice(0), RK_Results.slice(1));
+		if (error < pow(hfac,5)) h*=std::min(hfacmax,hfac*pow(1/error,0.2)); 
+		if (h>hmax) h=hmax;
+		while (error>1){		
 			if (h<hmin){
 				h=hmin;
 				RK_Results = rk45(xy, circ);
 				break;
 			}
 			RK_Results = rk45(xy, circ);
+			h*=std::min(hfacmax,std::max(hfacmin,hfac*pow(1/error,0.2)));
 			error=error_func(RK_Results.slice(0), RK_Results.slice(1));
-		}	
-		xy = RK_Results.slice(1); //set xy
-		if (run_counter%write_limit==0 && file_counter <File_Max){	
-			writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");	
-			xy.raw_print(writer);
-			writer.close();
-			file_counter++;
 		}
+		xy = RK_Results.slice(1); //set xy, print xy then repeat
+    		if (run_counter%write_limit==0&& file_counter<File_Max){
+	    		writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");
+	    		xy.raw_print(writer);
+	    		writer.close(); 
+	    		file_counter++;
+	    		if (Flag_Print_Hamil) hamil_print <<hamil(circ, xy) << endl;
+	    		if (Flag_Print_Momen) momen_print << p(circ, xy) << "\t" << q(circ, xy) << "\t" << m(circ, xy) << endl;
+			time_print << t << endl;
+    		}
 		else if (file_counter==File_Max) break;
-		run_counter++;	
+		run_counter++;
 		cout <<t <<"\t" << file_counter<< endl;
 	}
 	writer.open("Vortex_xy_" + std:: to_string(file_counter) + ".txt");
@@ -309,6 +301,8 @@ void dormand_price(vec &t_steps, vec &circ, mat &xy) {
 	std::cout << "File output complete\n"<<run_counter;
 	h = h_old;
 }
+
+
 
 void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until final dipole is 20d + L away
   std:: ofstream writer, hamil_print, momen_print;			//initialize the three file output objects
@@ -333,11 +327,11 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
   double init_L=hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1));
   vec lengths={hypot(xy(0,0)-xy(2,0), xy(0,1)-xy(2,1)),hypot(xy(0,0)-xy(1,0), xy(0,1)-xy(1,1))};
   while(lengths.max()<(20*init_d)+init_L) {
-        RK_Results = rk45(xy, circ); 
+    RK_Results = rk45(xy, circ); 
     error = error_func(RK_Results.slice(0), RK_Results.slice(1));
     if (error < pow(hfac,5)) h*=std::min(hfacmax,hfac*pow(1/error,0.2)); 
     if (h>hmax) h=hmax;
-   while (error>1){		
+    while (error>1){		
 	if (h<hmin){
 		h=hmin;
 		RK_Results = rk45(xy, circ);
@@ -377,7 +371,16 @@ void bound_dormand_price(vec &circ, mat &xy) {      //run dormand price until fi
 //------------------------------------------------------------------------------------------------------------------
 
 int main(){
-	mat xy;	
+	mat xy=mat(N,2,fill::zeros);
+	xy=rand_per_mat();
+	vec circ=per_circ();	
+	vec t= timesteps(0, 15, 100);
+	dormand_price(t, circ, xy  );
+	return 0;
+}
+
+/* 4n critical lengths
+mat xy;	
 	vec circ = { 1,-1,1,-1 };
 	Post_Process post(0);
 	double L_inc = 1.2/320.0;
@@ -398,7 +401,9 @@ int main(){
 			}
 	}
 	return 0;
-}
+	*/
+
+
 
 	/*mat xy;
 	vec circ={-1,1,1,1, 1, 1};

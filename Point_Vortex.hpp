@@ -14,12 +14,12 @@ using namespace arma;
 
 //------------------------------------------------------------------ Constants + Flags -----------------------------------------------------------------------------------------------------------
 
-const int N = 4;			//number of vortices in syste
-const int File_Max = pow(10,6);		//max files allowed to print
-const int write_limit=pow(10,0);
+const int N = 20;			//number of vortices in syste
+const int File_Max = pow(10,5);		//max files allowed to print
+const int write_limit=pow(10,2);
 const double pi = 3.14159265358979;
 
-const bool Flag_is_Periodic = false; //periodic BCs
+const bool Flag_is_Periodic = true; //periodic BCs
 const bool Flag_Print_Hamil = true; //print hamiltonian 
 const bool Flag_Print_Momen = true; //print momentums
 
