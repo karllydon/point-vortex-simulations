@@ -14,4 +14,4 @@ $(OBJECTS): Point_Vortex.hpp Post_Process.hpp
 
 
 clean: 
-	$(RM) main *.o Vortex*.txt python.txt 
+	$(RM) main *.o Vortex*.txt python.txt momentums.txt timesteps.txt 
